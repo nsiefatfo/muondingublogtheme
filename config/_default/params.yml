@@ -78,7 +78,7 @@ footer:
 sidebar: left
 
 social:
-  email: 'muondingu.work@gmail.com'
+  # email: 'muondingu.work@gmail.com'
   # github: https://github.com/yourname
   # google: https://plus.google.com/yourname
   # twitter: https://twitter.com/yourname
