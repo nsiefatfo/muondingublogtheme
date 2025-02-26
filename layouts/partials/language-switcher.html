@@ -16,9 +16,23 @@
        style="background-image: url('/images/flags/{{ .Language.Lang }}.svg')"
        lang="{{ .Language.Lang }}"
        hreflang="{{ .Language.Lang }}"
+       rel="alternate"
        aria-label="Switch to {{ .Language.LanguageName }}"
        title="{{ .Language.LanguageName }}">
       <span class="visually-hidden">{{ .Language.LanguageName }}</span>
+    </a>
+    {{ end }}
+  </div>
+  
+  <!-- SEO-only links - not visually displayed but accessible to crawlers -->
+  <div class="seo-language-links visually-hidden" aria-hidden="true">
+    {{ range .Translations }}
+    <a href="{{ .RelPermalink }}" 
+       lang="{{ .Language.Lang }}" 
+       hreflang="{{ .Language.Lang }}" 
+       rel="alternate" 
+       title="{{ .Language.LanguageName }}">
+      {{ .Language.LanguageName }}
     </a>
     {{ end }}
   </div>

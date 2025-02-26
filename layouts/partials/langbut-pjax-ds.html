@@ -2,6 +2,9 @@
 <div class="lang-switcher" style="display: none;">
   <button class="lang-main"></button>
   <div class="lang-alternatives"></div>
+  
+  <!-- Hidden links for SEO/Crawlers - populated by JS -->
+  <div class="seo-language-links visually-hidden" aria-hidden="true"></div>
 </div>
 
 {{/* Add this to your PJAX container */}}
@@ -66,6 +69,25 @@
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
+
+/* Properly hidden but accessible to screen readers and search engines */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  /* Important: Don't use display: none or visibility: hidden as these hide from search engines */
+}
+
+/* Container for SEO links */
+.seo-language-links {
+  /* No additional styling needed beyond visually-hidden */
+}
 </style>
 
 <script>
@@ -75,6 +97,7 @@ class LangSwitcher {
     this.container = document.querySelector('.lang-switcher');
     this.mainButton = this.container.querySelector('.lang-main');
     this.alternatives = this.container.querySelector('.lang-alternatives');
+    this.seoLinksContainer = this.container.querySelector('.seo-language-links');
     this.init();
   }
 
@@ -126,15 +149,30 @@ class LangSwitcher {
     
     // Clear and rebuild alternatives
     this.alternatives.innerHTML = '';
+    
+    // Clear and rebuild SEO links
+    this.seoLinksContainer.innerHTML = '';
+    
     alternatives.forEach(alt => {
+      // Create interactive option
       const link = document.createElement('a');
       link.className = 'lang-option';
       link.href = alt.url;
       link.style.backgroundImage = `url('/flags/${alt.lang}.png')`;
       link.title = alt.title;
+      link.setAttribute('hreflang', alt.lang);
+      link.setAttribute('rel', 'alternate');
       
       link.addEventListener('click', e => this.handleClick(e, alt.url));
       this.alternatives.appendChild(link);
+      
+      // Create SEO-friendly link
+      const seoLink = document.createElement('a');
+      seoLink.href = alt.url;
+      seoLink.setAttribute('hreflang', alt.lang);
+      seoLink.setAttribute('rel', 'alternate');
+      seoLink.textContent = alt.title;
+      this.seoLinksContainer.appendChild(seoLink);
     });
 
     this.container.style.display = 'block';
