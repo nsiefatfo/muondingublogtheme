@@ -65,7 +65,7 @@ open_graph:
 excerpt_link: Read More
 
 footer:
-  since:  # 2020-current year
+  since: 2020
   powered: false
   count: true
   busuanzi: true
@@ -433,14 +433,26 @@ share:
 home_categories:
   enable: true
   content:
-    - categories: Knowledge-Management # string (single-layer category) or array (multi-layer category)
+    - categories: Knowledge Management # string (single-layer category) or array (multi-layer category)
       cover: /images/jinhsichibi.webp
+      url: /custom-url/ # Optional: Custom URL to use instead of default category URL
+      url_en: /en/custom-url/ # Optional: English-specific URL 
+      url_vi: /vi/custom-url/ # Optional: Vietnamese-specific URL
     - categories: Automation
       cover: /images/jinhshichibi.png
+      url: /custom-automation-url/ # Optional: Custom URL to use instead of default category URL
+      url_en: /en/automation/ # Optional: English-specific URL
+      url_vi: /vi/tu-dong-hoa/ # Optional: Vietnamese-specific URL
     - categories: Paradigm-Shift
       cover: /images/jinhsichibi.png
+      url: /custom-paradigm-shift-url/ # Optional: Custom URL to use instead of default category URL
+      url_en: /en/paradigm-shift/ # Optional: English-specific URL
+      url_vi: /vi/chuyen-doi-mo-hinh/ # Optional: Vietnamese-specific URL
     - categories: Blog-Stack
-      cover: /images/jinhsichibi.png  
+      cover: /images/jinhsichibi.png
+      url: /custom-blog-stack-url/ # Optional: Custom URL to use instead of default category URL
+      url_en: /en/blog-stack/ # Optional: English-specific URL
+      url_vi: /vi/stack-blog/ # Optional: Vietnamese-specific URL
 
 ########################################
 # Experimental features

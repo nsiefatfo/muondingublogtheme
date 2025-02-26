@@ -5,10 +5,30 @@
     <div class="post-categories-wrapper" data-aos="{{ $ctx.Site.Params.animation.options.home.post }}">
       {{ range $k, $v := $ctx.Site.Params.home_categories.content }}
         {{ if $v.categories }}
+          {{ $categorySlug := $v.categories | urlize }}
           {{ $categoryPosts := where $ctx.Site.RegularPages "Params.categories" "intersect" (slice $v.categories) }}
-          {{ $categoryTerm := index (where $ctx.Site.Taxonomies.categories.ByCount "Page.Title" "eq" $v.categories) 0 }}
+          
+          <!-- Get the category term via slug for more reliable matching -->
+          {{ $categoryTerm := where $ctx.Site.Taxonomies.categories.ByCount "Term" "eq" $categorySlug }}
+          {{ if $categoryTerm }}
+            {{ $categoryTerm = index $categoryTerm 0 }}
+          {{ end }}
+          
           <div class="post-categories-wrap">
-            <a class="post-link" href="{{ (printf "%s%s" "categories/" $v.categories) | relURL }}" aria-label=""></a>
+            <!-- Handle URL generation with language support -->
+            {{ $categoryURL := printf "/categories/%s" $categorySlug }}
+            {{ with $v.url }}
+              {{ $categoryURL = . }}
+            {{ end }}
+            
+            <!-- Support for language-specific URLs -->
+            {{ $langPrefix := $ctx.Site.Language.Lang }}
+            {{ $urlKey := printf "url_%s" $langPrefix }}
+            {{ with index $v $urlKey }}
+              {{ $categoryURL = . }}
+            {{ end }}
+            
+            <a class="post-link" href="{{ $categoryURL | relLangURL }}" aria-label="{{ $v.categories }}"></a>
             <div class="post-categories-cover">
               {{ if $v.cover }}
                 <img
