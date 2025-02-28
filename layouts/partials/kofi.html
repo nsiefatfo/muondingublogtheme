@@ -1,0 +1,68 @@
+<!-- Kofi widget-->
+<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+<script>
+  kofiWidgetOverlay.draw('muondingu', {
+    'type': 'floating-chat',
+    'floating-chat.donateButton.text': '!!',
+    'floating-chat.donateButton.background-color': '#f45d22',
+    'floating-chat.donateButton.text-color': '#fff'
+  });
+  
+</script>
+
+<style>
+/* Kofi Widget Adjustments */
+.floating-chat-kofi-popup-iframe { 
+  left: unset !important; 
+  right: 126px !important;
+  bottom: 76px !important;
+  z-index: 99;
+}
+
+.floatingchat-container-wrap { 
+  left: 86px !important;
+  right: unset !important;
+  bottom: 20px !important;
+  transition: transform 0.3s ease;
+  /* z-index: 98; */
+  display: block;
+}
+
+/* Mobile Overrides */ 
+@media screen and (max-width: 768px) {
+  .floating-chat-kofi-popup-iframe,
+  .floatingchat-container-wrap,
+  .floating-chat-kofi-popup-iframe > iframe,
+  #floating-chat-kofi-popup-iframe {
+    position: fixed !important;
+    left: auto !important;
+    right: 10px !important;
+    bottom: auto !important;
+    top: 10px !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    max-width: 55px !important;
+  }
+
+  .floatingchat-donate-button.text {
+    display: none !important; /* Hide text label on mobile */
+  }
+
+  .floatingchat-donate-button {
+    padding: 12px !important;
+    border-radius: 50% !important;
+  }
+
+  .floatingchat-donate-icon {
+    margin: 0 !important;
+  }
+}
+
+/* Hover effects for desktop only */
+@media (hover: hover) and (pointer: fine) {
+  .floatingchat-container-wrap:hover {
+    transform: scale(1.05);
+  }
+} 
+</style>

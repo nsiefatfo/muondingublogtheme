@@ -76,6 +76,7 @@
     {{ partial "afterFooter.html" . }}
     {{ partial "language-switcher.html" . }}
     {{ partial "youtube-player-mini.html" . }}
+    {{ partial "kofi.html" . }}
   </body>
 </html>
 
@@ -84,53 +85,3 @@
 <script src="https://static.elfsight.com/platform/platform.js" async></script>
 <div class="elfsight-app-4aad71cb-9178-4154-afbc-2b2b9c5658bc" data-elfsight-app-lazy></div> -->
 
-<!-- Kofi widget-->
-<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
-<script>
-  kofiWidgetOverlay.draw('muondingu', {
-    'type': 'floating-chat',
-    'floating-chat.donateButton.text': 'Meow!',
-    'floating-chat.donateButton.background-color': '#f45d22',
-    'floating-chat.donateButton.text-color': '#fff'
-  });
-</script>
-
-<style>
-.floating-chat-kofi-popup-iframe { 
-  left: unset; 
-  right: 126px; 
-  bottom: 76px;
-  z-index: 999999; /* Ensure popup appears above other elements */
-}
-
-.floatingchat-container-wrap { 
-  left: unset; 
-  right: 86px; 
-  bottom: 20px;
-  transition: transform 0.3s ease;
-  z-index: 999998; /* Keep container below popup but above other elements */
-}
-
-.floatingchat-container-wrap:hover {
-  transform: scale(1.05);
-}
-
-/* Mobile styles */
-@media (max-width: 768px) {
-  .floating-chat-kofi-popup-iframe {
-    left: unset;
-    right: 20px !important;
-    bottom: unset;
-    top: 20px !important;
-    max-width: 90vw; /* Prevent overflow on small screens */
-  }
-
-  .floatingchat-container-wrap {
-    left: unset; 
-    right: 20px !important;
-    bottom: unset;
-    top: 20px !important;
-    max-width: 90vw; /* Match popup width constraint */
-  }
-}
-</style>
