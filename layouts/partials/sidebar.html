@@ -22,6 +22,7 @@
     </meting-js>
   {{ end }}
   
+
   <div class="sidebar-wrapper {{ if in .Site.Params.mainSections .Type }}wrap-sticky{{ end }}">
     <div
       class="sidebar-wrap"
@@ -50,6 +51,7 @@
     </div>
   </div>
 
+  
   <div class="sidebar-widget">
     {{ if and (not (in .Site.Params.mainSections .Type)) .Site.Params.widgets }}
       {{ range .Site.Params.widgets }}
@@ -60,6 +62,8 @@
 </aside>
 
 <style>
+
+
 .sidebar-common-sidebar {
   display: flex;
   flex-direction: column;

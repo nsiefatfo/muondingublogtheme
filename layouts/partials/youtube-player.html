@@ -1,0 +1,327 @@
+<!-- Create a file called youtube-player.html in your Hugo layouts/partials directory -->
+
+<div id="youtube-player-container" class="youtube-player-widget">
+    <div class="player-header">
+      <h3 id="current-track-title">No track selected</h3>
+    </div>
+    
+    <div class="player-video">
+      <div id="youtube-player"></div>
+    </div>
+    
+    <div class="player-controls">
+      <button id="prev-button" class="control-button">Previous</button>
+      <button id="play-pause-button" class="control-button">Play</button>
+      <button id="next-button" class="control-button">Next</button>
+      <div class="volume-control">
+        <span>Volume:</span>
+        <input type="range" id="volume-slider" min="0" max="100" value="70">
+      </div>
+    </div>
+    
+    <div class="playlist-container">
+      <h4 class="playlist-title">Playlist</h4>
+      <ul id="playlist" class="track-list"></ul>
+    </div>
+    
+    <style>
+      .youtube-player-widget {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      
+      .player-header {
+        margin-bottom: 15px;
+        text-align: center;
+      }
+      
+      .player-video {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+        margin-bottom: 15px;
+      }
+      
+      #youtube-player {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+      }
+      
+      .player-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+      
+      .control-button {
+        padding: 8px 15px;
+        background-color: #4a4a4a;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      
+      .control-button:hover {
+        background-color: #666;
+      }
+      
+      .volume-control {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-left: 15px;
+      }
+      
+      .playlist-container {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      
+      .playlist-title {
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      
+      .track-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .track-list li {
+        padding: 8px 10px;
+        margin-bottom: 5px;
+        background-color: #e9e9e9;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      
+      .track-list li:hover {
+        background-color: #ddd;
+      }
+      
+      .track-list li.active {
+        background-color: #4a4a4a;
+        color: white;
+      }
+  
+      .loading-message {
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+        color: #666;
+      }
+    </style>
+  
+    <script>
+      // YouTube API Integration
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      
+      // Player configuration (can be customized in your Hugo config)
+      const playerConfig = {
+        playlistId: '{{ .Site.Params.youtubePlaylistId | default "PLNCRTSKlYNhcFv-2-5VB2H1Gm_reJ3aFY" }}', // Default playlist ID (replace with your own)
+        autoplay: {{ .Site.Params.playerAutoplay | default 0 }},
+        theme: '{{ .Site.Params.playerTheme | default "dark" }}',
+        shuffle: {{ .Site.Params.playerShuffle | default 0 }}
+      };
+      
+      // Global variables
+      let player;
+      let playlist = [];
+      let currentIndex = 0;
+      let isPlaying = false;
+      
+      // Initialize YouTube player when API is ready
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('youtube-player', {
+          height: '100%',
+          width: '100%',
+          playerVars: {
+            'playsinline': 1,
+            'controls': 0,
+            'showinfo': 0,
+            'rel': 0,
+            'iv_load_policy': 3,
+            'modestbranding': 1,
+            'theme': playerConfig.theme
+          },
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+      
+      // When player is ready, load the playlist
+      function onPlayerReady(event) {
+        // Set initial volume
+        player.setVolume(70);
+        
+        // Set volume control listener
+        document.getElementById('volume-slider').addEventListener('input', function() {
+          player.setVolume(this.value);
+        });
+        
+        // Add control button event listeners
+        document.getElementById('play-pause-button').addEventListener('click', togglePlayPause);
+        document.getElementById('prev-button').addEventListener('click', playPreviousTrack);
+        document.getElementById('next-button').addEventListener('click', playNextTrack);
+        
+        // Load the YouTube playlist directly
+        loadYouTubePlaylist();
+      }
+      
+      // Handle player state changes
+      function onPlayerStateChange(event) {
+        // When video ends, play next
+        if (event.data === YT.PlayerState.ENDED) {
+          playNextTrack();
+        }
+        
+        // When playlist loads, update the current playing track
+        if (event.data === YT.PlayerState.CUED) {
+          updatePlaylistUI();
+        }
+        
+        // Update play/pause button text
+        if (event.data === YT.PlayerState.PLAYING) {
+          isPlaying = true;
+          document.getElementById('play-pause-button').textContent = 'Pause';
+          
+          // Update current track title based on what's actually playing
+          const videoData = player.getVideoData();
+          if (videoData && videoData.title) {
+            document.getElementById('current-track-title').textContent = videoData.title;
+          }
+          
+          // Mark the current playing track in the playlist
+          updateActiveTrack();
+        } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+          isPlaying = false;
+          document.getElementById('play-pause-button').textContent = 'Play';
+        }
+      }
+      
+      // Load playlist directly from YouTube
+      function loadYouTubePlaylist() {
+        const playlistElement = document.getElementById('playlist');
+        playlistElement.innerHTML = '<li class="loading-message">Loading playlist...</li>';
+        
+        // Load the YouTube playlist directly into the player
+        player.loadPlaylist({
+          list: playerConfig.playlistId,
+          listType: 'playlist',
+          index: 0,
+          startSeconds: 0
+        });
+        
+        // Pause it immediately unless autoplay is enabled
+        if (!playerConfig.autoplay) {
+          // Small timeout to ensure playlist loads before pausing
+          setTimeout(() => {
+            player.pauseVideo();
+          }, 500);
+        }
+      }
+      
+      // Update the playlist UI with the actual videos from YouTube
+      function updatePlaylistUI() {
+        // Get the playlist data from the player
+        const totalVideos = player.getPlaylist().length;
+        const videoIds = player.getPlaylist();
+        
+        // Clear and update playlist UI
+        const playlistElement = document.getElementById('playlist');
+        playlistElement.innerHTML = '';
+        
+        // Function to get video details and update UI
+        function getVideoDetails(videoId, index) {
+          // We'll use the oEmbed endpoint which doesn't require an API key
+          fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+            .then(response => response.json())
+            .then(data => {
+              const li = document.createElement('li');
+              li.textContent = data.title;
+              li.dataset.index = index;
+              li.addEventListener('click', () => {
+                player.playVideoAt(index);
+              });
+              playlistElement.appendChild(li);
+              
+              // If this is the current playing video, mark it as active
+              if (index === player.getPlaylistIndex()) {
+                li.classList.add('active');
+                document.getElementById('current-track-title').textContent = data.title;
+              }
+            })
+            .catch(() => {
+              // Fallback if oEmbed fails
+              const li = document.createElement('li');
+              li.textContent = `Track ${index + 1}`;
+              li.dataset.index = index;
+              li.addEventListener('click', () => {
+                player.playVideoAt(index);
+              });
+              playlistElement.appendChild(li);
+            });
+        }
+        
+        // Get details for each video
+        videoIds.forEach((videoId, index) => {
+          getVideoDetails(videoId, index);
+        });
+      }
+      
+      // Update the active track in the playlist UI
+      function updateActiveTrack() {
+        const currentIndex = player.getPlaylistIndex();
+        if (currentIndex !== undefined && currentIndex !== null) {
+          const trackItems = document.querySelectorAll('#playlist li');
+          trackItems.forEach((item, index) => {
+            if (index === currentIndex) {
+              item.classList.add('active');
+            } else {
+              item.classList.remove('active');
+            }
+          });
+        }
+      }
+      
+      // Toggle play/pause
+      function togglePlayPause() {
+        if (isPlaying) {
+          player.pauseVideo();
+        } else {
+          player.playVideo();
+        }
+      }
+      
+      // Play the next track
+      function playNextTrack() {
+        player.nextVideo();
+      }
+      
+      // Play the previous track
+      function playPreviousTrack() {
+        player.previousVideo();
+      }
+    </script>
+  </div>
