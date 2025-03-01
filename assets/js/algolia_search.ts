@@ -49,7 +49,7 @@ const algoliaHandler = () => {
         item: (data) => {
           return (
             '<a href="' +
-            data.url +
+            data.url + 
             '" class="reimu-hit-item-link">' +
             data._highlightResult.title.value +
             "</a>"
