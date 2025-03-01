@@ -32,6 +32,8 @@
     {{ end }}
   </div>
 
+
+
   <style>
   .sidebar-author-mini {
     display: flex;
@@ -78,6 +80,50 @@
   .sidebar-menu-icon {
     font-size: 1.2rem;
   }
+
+
+  /* Button wrapper positioning */
+  .sidebar-btn-wrapper {
+    position: absolute;
+    top: unset;
+    bottom: 10%; /* Changed from 20% to 50% to raise it up */
+    right: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: grid;
+    gap: 10px;
+  }
+
+  /* Button styling */
+  .sidebar-toc-btn,
+  .sidebar-common-btn {
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-wrap);
+    border-radius: 5px 0 0 5px;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+  }
+
+  .sidebar-toc-btn.current,
+  .sidebar-common-btn.current {
+    background-color: var(--color-link);
+  }
+
+  /* Optional: Add icons or indicators for the buttons */
+  .sidebar-toc-btn:before {
+    content: "📑"; /* You can replace this with an icon class */
+  }
+
+  .sidebar-common-btn:before {
+    content: "≡"; /* You can replace this with an icon class */
+  }
+
+
   </style>
 
 {{ else }}
@@ -160,3 +206,65 @@
 <script src="https://static.elfsight.com/platform/platform.js" async></script>
 <div class="elfsight-app-4aad71cb-9178-4154-afbc-2b2b9c5658bc" data-elfsight-app-lazy></div> -->
 
+<!-- RELATED POSTS -->
+<!-- Add this to sidebar/commonBar.html -->
+{{ if and (in .Site.Params.mainSections .Type) (.Params.tags) }}
+  {{ $currentPage := . }}
+  {{ $relatedPosts := slice }}
+  {{ $limit := default 5 .Site.Params.related_posts_limit }}
+  
+  {{ range .Site.RegularPages }}
+    {{ if and (ne .Permalink $currentPage.Permalink) (intersect .Params.tags $currentPage.Params.tags) }}
+      {{ $relatedPosts = $relatedPosts | append . }}
+    {{ end }}
+  {{ end }}
+
+  {{ if $relatedPosts }}
+    <div class="sidebar-related">
+      <h3 class="sidebar-related-title">Related Posts</h3>
+      <div class="sidebar-related-posts">
+        {{ range first $limit $relatedPosts }}
+          {{ $displayTitle := .Title }}
+          {{ if gt (len .Title) 20 }}
+            {{ $displayTitle = printf "%s..." (substr .Title 0 18) }}
+          {{ end }}
+          <div class="sidebar-related-item" data-aos="fade-left">
+            <a href="{{ .RelPermalink }}" class="sidebar-related-link" title="{{ .Title }}">
+              <div class="sidebar-related-cover">
+                {{ if .Params.cover }}
+                  <img
+                    data-src="{{ .Params.cover }}"
+                    data-sizes="auto"
+                    alt="{{ .Title }}"
+                    class="lazyload"
+                  />
+                {{ else }}
+                  {{ $cover := partial "helpers/randomCover.html" . }}
+                  {{ if $cover }}
+                    <img
+                      data-src="{{ $cover }}"
+                      data-sizes="auto"
+                      alt="{{ .Title }}"
+                      class="lazyload"
+                    />
+                  {{ end }}
+                {{ end }}
+              </div>
+              <div class="sidebar-related-info">
+                <div class="sidebar-related-title">{{ $displayTitle }}</div>
+                <div class="sidebar-related-date">{{ .Date.Format "2006-01-02" }}</div>
+              </div>
+            </a>
+          </div>
+        {{ end }}
+      </div>
+      <div class="related-tags">
+        {{ range .Params.tags }}
+          <a href="{{ "tags/" | absLangURL }}{{ . | urlize | lower }}" class="related-tag">
+            {{ . | upper }}
+          </a>
+        {{ end }}
+      </div>
+    </div>
+  {{ end }}
+{{ end }}
