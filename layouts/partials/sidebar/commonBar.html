@@ -32,100 +32,67 @@
     {{ end }}
   </div>
 
+  {{/* Add related posts section only in the minimalistic version */}}
+  {{ if .Params.tags }}
+    {{ $currentPage := . }}
+    {{ $relatedPosts := slice }}
+    {{ $limit := default 5 .Site.Params.related_posts_limit }}
+    
+    {{ range .Site.RegularPages }}
+      {{ if and (ne .Permalink $currentPage.Permalink) (intersect .Params.tags $currentPage.Params.tags) }}
+        {{ $relatedPosts = $relatedPosts | append . }}
+      {{ end }}
+    {{ end }}
 
-
-  <style>
-  .sidebar-author-mini {
-    display: flex;
-    justify-content: center;
-    margin: 0.8rem 0;
-    padding: 0.3rem;
-  }
-
-  .sidebar-author-mini img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-    padding: 1px;
-    background: var(--color-wrap);
-  }
-
-  .sidebar-author-mini img:hover {
-    transform: scale(1.05);
-  }
-
-  .sidebar-menu-mini {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding: 0.3rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .sidebar-menu-item {
-    color: var(--color-text);
-    text-decoration: none;
-    transition: all 0.3s ease;
-  }
-
-  .sidebar-menu-item:hover {
-    color: var(--color-link);
-    transform: translateY(-2px);
-  }
-
-  .sidebar-menu-icon {
-    font-size: 1.2rem;
-  }
-
-
-  /* Button wrapper positioning */
-  .sidebar-btn-wrapper {
-    position: absolute;
-    top: unset;
-    bottom: 10%; /* Changed from 20% to 50% to raise it up */
-    right: 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: grid;
-    gap: 10px;
-  }
-
-  /* Button styling */
-  .sidebar-toc-btn,
-  .sidebar-common-btn {
-    width: 40px;
-    height: 40px;
-    background-color: var(--color-wrap);
-    border-radius: 5px 0 0 5px;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
-  }
-
-  .sidebar-toc-btn.current,
-  .sidebar-common-btn.current {
-    background-color: var(--color-link);
-  }
-
-  /* Optional: Add icons or indicators for the buttons */
-  .sidebar-toc-btn:before {
-    content: "📑"; /* You can replace this with an icon class */
-  }
-
-  .sidebar-common-btn:before {
-    content: "≡"; /* You can replace this with an icon class */
-  }
-
-
-  </style>
-
+    {{ if $relatedPosts }}
+      <div class="sidebar-related">
+        <h3 class="sidebar-related-title">Related Posts</h3>
+        <div class="sidebar-related-posts">
+          {{ range first $limit $relatedPosts }}
+            {{ $displayTitle := .Title }}
+            {{ if gt (len .Title) 20 }}
+              {{ $displayTitle = printf "%s..." (substr .Title 0 18) }}
+            {{ end }}
+            <div class="sidebar-related-item" data-aos="fade-left">
+              <a href="{{ .RelPermalink }}" class="sidebar-related-link" title="{{ .Title }}">
+                <div class="sidebar-related-cover">
+                  {{ if .Params.cover }}
+                    <img
+                      data-src="{{ .Params.cover }}"
+                      data-sizes="auto"
+                      alt="{{ .Title }}"
+                      class="lazyload"
+                    />
+                  {{ else }}
+                    {{ $cover := partial "helpers/randomCover.html" . }}
+                    {{ if $cover }}
+                      <img
+                        data-src="{{ $cover }}"
+                        data-sizes="auto"
+                        alt="{{ .Title }}"
+                        class="lazyload"
+                      />
+                    {{ end }}
+                  {{ end }}
+                </div>
+                <div class="sidebar-related-info">
+                  <div class="sidebar-related-title">{{ $displayTitle }}</div>
+                  <div class="sidebar-related-date">{{ .Date.Format "2006-01-02" }}</div>
+                </div>
+              </a>
+            </div>
+          {{ end }}
+        </div>
+        <div class="related-tags">
+          {{ range .Params.tags }}
+            <a href="{{ "tags/" | absLangURL }}{{ . | urlize | lower }}" class="related-tag">
+              {{ . | upper }}
+            </a>
+          {{ end }}
+        </div>
+      </div>
+    {{ end }}
+  {{ end }}
 {{ else }}
   {{/* Original version for other pages */}}
   <div class="sidebar-author">
@@ -193,7 +160,187 @@
   </div>
 {{ end }}
 
-<!-- <script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+{{/* All CSS styles in one place at the top */}}
+<style>
+  /* Mini sidebar styles (for posts) */
+  .sidebar-author-mini {
+    display: flex;
+    justify-content: center;
+    margin: 0.8rem 0;
+    padding: 0.3rem;
+  }
+
+  .sidebar-author-mini img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    padding: 1px;
+    background: var(--color-wrap);
+  }
+
+  .sidebar-author-mini img:hover {
+    transform: scale(1.05);
+  }
+
+  .sidebar-menu-mini {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .sidebar-menu-item {
+    color: var(--color-text);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar-menu-item:hover {
+    color: var(--color-link);
+    transform: translateY(-2px);
+  }
+
+  .sidebar-menu-icon {
+    font-size: 1.2rem;
+  }
+
+  /* Button wrapper positioning */
+  .sidebar-btn-wrapper {
+    position: absolute;
+    top: unset;
+    bottom: 10%; /* Changed from 20% to 50% to raise it up */
+    right: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: grid;
+    gap: 10px;
+  }
+
+  /* Button styling */
+  .sidebar-toc-btn,
+  .sidebar-common-btn {
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-wrap);
+    border-radius: 5px 0 0 5px;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+  }
+
+  .sidebar-toc-btn.current,
+  .sidebar-common-btn.current {
+    background-color: var(--color-link);
+  }
+
+  /* Optional: Add icons or indicators for the buttons */
+  .sidebar-toc-btn:before {
+    content: "📑"; /* You can replace this with an icon class */
+  }
+
+  .sidebar-common-btn:before {
+    content: "≡"; /* You can replace this with an icon class */
+  }
+
+  /* Related posts styling */
+  .sidebar-related {
+    margin-top: 1rem;
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+    padding: 0.5rem;
+  }
+
+  .sidebar-related-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: var(--color-text);
+  }
+
+  .sidebar-related-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sidebar-related-item {
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar-related-item:hover {
+    transform: translateX(3px);
+  }
+
+  .sidebar-related-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .sidebar-related-cover {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .sidebar-related-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sidebar-related-info {
+    flex: 1;
+  }
+
+  .sidebar-related-title {
+    font-size: 0.9rem;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+  }
+
+  .sidebar-related-date {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .related-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .related-tag {
+    font-size: 0.7rem;
+    background-color: var(--color-background);
+    color: var(--color-text-secondary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .related-tag:hover {
+    background-color: var(--color-link);
+    color: white;
+  }
+</style>
+
+<!-- Commented out widgets -->
+<!-- 
+<script src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
 <script>
   kofiWidgetOverlay.draw('muondingu', {
     'type': 'floating-chat',
@@ -204,67 +351,5 @@
 </script>
 
 <script src="https://static.elfsight.com/platform/platform.js" async></script>
-<div class="elfsight-app-4aad71cb-9178-4154-afbc-2b2b9c5658bc" data-elfsight-app-lazy></div> -->
-
-<!-- RELATED POSTS -->
-<!-- Add this to sidebar/commonBar.html -->
-{{ if and (in .Site.Params.mainSections .Type) (.Params.tags) }}
-  {{ $currentPage := . }}
-  {{ $relatedPosts := slice }}
-  {{ $limit := default 5 .Site.Params.related_posts_limit }}
-  
-  {{ range .Site.RegularPages }}
-    {{ if and (ne .Permalink $currentPage.Permalink) (intersect .Params.tags $currentPage.Params.tags) }}
-      {{ $relatedPosts = $relatedPosts | append . }}
-    {{ end }}
-  {{ end }}
-
-  {{ if $relatedPosts }}
-    <div class="sidebar-related">
-      <h3 class="sidebar-related-title">Related Posts</h3>
-      <div class="sidebar-related-posts">
-        {{ range first $limit $relatedPosts }}
-          {{ $displayTitle := .Title }}
-          {{ if gt (len .Title) 20 }}
-            {{ $displayTitle = printf "%s..." (substr .Title 0 18) }}
-          {{ end }}
-          <div class="sidebar-related-item" data-aos="fade-left">
-            <a href="{{ .RelPermalink }}" class="sidebar-related-link" title="{{ .Title }}">
-              <div class="sidebar-related-cover">
-                {{ if .Params.cover }}
-                  <img
-                    data-src="{{ .Params.cover }}"
-                    data-sizes="auto"
-                    alt="{{ .Title }}"
-                    class="lazyload"
-                  />
-                {{ else }}
-                  {{ $cover := partial "helpers/randomCover.html" . }}
-                  {{ if $cover }}
-                    <img
-                      data-src="{{ $cover }}"
-                      data-sizes="auto"
-                      alt="{{ .Title }}"
-                      class="lazyload"
-                    />
-                  {{ end }}
-                {{ end }}
-              </div>
-              <div class="sidebar-related-info">
-                <div class="sidebar-related-title">{{ $displayTitle }}</div>
-                <div class="sidebar-related-date">{{ .Date.Format "2006-01-02" }}</div>
-              </div>
-            </a>
-          </div>
-        {{ end }}
-      </div>
-      <div class="related-tags">
-        {{ range .Params.tags }}
-          <a href="{{ "tags/" | absLangURL }}{{ . | urlize | lower }}" class="related-tag">
-            {{ . | upper }}
-          </a>
-        {{ end }}
-      </div>
-    </div>
-  {{ end }}
-{{ end }}
+<div class="elfsight-app-4aad71cb-9178-4154-afbc-2b2b9c5658bc" data-elfsight-app-lazy></div> 
+-->

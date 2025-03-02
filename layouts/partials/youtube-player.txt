@@ -369,18 +369,7 @@
   .player-fixed .list-cur{
     background-color: var(--color-h2-border) !important;
   }
-
-  /*scroll to active track*/
   
-  .highlight-pulse {
-  animation: pulse-highlight 1s ease-out;
-}
-
-@keyframes pulse-highlight {
-  0% { background-color: rgba(255, 255, 255, 0.3); }
-  100% { background-color: transparent; }
-}
-
   /* Mobile responsiveness - Hide player on mobile */
   @media screen and (max-width: 768px) {
     .yt-player {
@@ -447,7 +436,7 @@
 </style>
   
 <script>
-// Create a self-executing function to isolate variables
+  // Create a self-executing function to isolate variables
 (function() {
   // Player configuration
   const playerConfig = {
@@ -463,7 +452,6 @@
   let isPlaying = false;
   let isFixed = playerConfig.fixed;
   let playlistData = [];
-  let shuffledPlaylist = []; // To store the shuffled order
   let isMobileVisible = false;
   let youtubePlayer = null;
 
@@ -544,7 +532,6 @@
       updatePlayPauseButton(true);
       updateCurrentTrackInfo();
       updateActiveTrack();
-      scrollToActiveTrack(); // Scroll to active track when changed
       
       // Add animation to mobile toggle when playing
       if (mobileToggle) {
@@ -583,16 +570,6 @@
     }
   }
 
-  // Fisher-Yates shuffle algorithm for our playlist
-  function shuffleArray(array) {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
-
   // Load playlist
   function loadYouTubePlaylist() {
     if (!youtubePlayer || !document.getElementById('playlist')) return;
@@ -611,11 +588,9 @@
       
       // After playlist is cued, apply shuffle if needed
       setTimeout(() => {
-        // If shuffle is enabled, we'll manage our own shuffle
         if (playerConfig.shuffle) {
-          console.log("Shuffle enabled - managing custom shuffle order");
-          // We'll handle our own shuffle rather than using YouTube's
-          youtubePlayer.setShuffle(false);
+          youtubePlayer.setShuffle(true);
+          console.log("Shuffle enabled");
         }
         
         // Now start playing if autoplay is enabled
@@ -636,70 +611,38 @@
   function updatePlaylistUI() {
     if (youtubePlayer && document.getElementById('playlist')) {
       const videoIds = youtubePlayer.getPlaylist();
-      if (!videoIds || !videoIds.length) {
-        document.getElementById('playlist').innerHTML = '<li class="loading-message player-list-light"><span class="player-list-cur"></span><span class="player-list-title">No tracks found in playlist</span></li>';
-        return;
-      }
-      
-      // Store original playlist
-      playlistData = videoIds.map((id, index) => ({ id, index }));
-      
-      // Generate shuffled order if shuffle is enabled
-      if (playerConfig.shuffle && (!shuffledPlaylist.length || shuffledPlaylist.length !== videoIds.length)) {
-        shuffledPlaylist = shuffleArray([...Array(videoIds.length).keys()]);
-      } else if (!playerConfig.shuffle) {
-        // If not shuffling, just use sequential indices
-        shuffledPlaylist = [...Array(videoIds.length).keys()];
-      }
-
       const playlistElement = document.getElementById('playlist');
       playlistElement.innerHTML = '';
 
-      function getVideoDetails(videoId, index, displayIndex) {
+      function getVideoDetails(videoId, index) {
         fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
           .then(response => response.json())
           .then(data => {
-            playlistData[index] = { 
-              id: videoId, 
-              title: data.title, 
-              thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-              originalIndex: index
-            };
-            appendPlaylistItem(displayIndex, data.title, videoId, index);
+            playlistData[index] = { id: videoId, title: data.title, thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` };
+            appendPlaylistItem(index, data.title, videoId);
           })
           .catch(() => {
-            appendPlaylistItem(displayIndex, `Track ${index + 1}`, videoId, index);
+            appendPlaylistItem(index, `Track ${index + 1}`, videoId);
           });
       }
 
-      function appendPlaylistItem(displayIndex, title, videoId, originalIndex) {
+      function appendPlaylistItem(index, title, videoId) {
         const li = document.createElement('li');
-        li.dataset.index = originalIndex; // Store original index for playback
-        li.dataset.displayIndex = displayIndex; // Store display index for UI
-        
-        // Add click event that properly handles both shuffled and unshuffled playback
-        li.addEventListener('click', () => {
-          // If shuffle enabled, we need to find the real position in YouTube's playlist
-          youtubePlayer.playVideoAt(originalIndex);
-        });
-        
+        li.dataset.index = index;
+        li.addEventListener('click', () => youtubePlayer.playVideoAt(index));
         li.innerHTML = `<span class="player-list-cur"></span><span class="player-list-title">${title}</span>`;
         playlistElement.appendChild(li);
-        
-        // Mark the current track
-        if (originalIndex === youtubePlayer.getPlaylistIndex()) {
+        if (index === youtubePlayer.getPlaylistIndex()) {
           li.classList.add('player-list-light');
           document.getElementById('current-track-title').textContent = title;
           document.getElementById('current-thumbnail').src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
         }
       }
 
-      // Display videos in order (original or shuffled)
-      for (let i = 0; i < shuffledPlaylist.length; i++) {
-        const originalIndex = shuffledPlaylist[i];
-        const videoId = videoIds[originalIndex];
-        // Get details for each video (in display order)
-        getVideoDetails(videoId, originalIndex, i);
+      if (videoIds && videoIds.length) {
+        videoIds.forEach((videoId, index) => getVideoDetails(videoId, index));
+      } else {
+        playlistElement.innerHTML = '<li class="loading-message player-list-light"><span class="player-list-cur"></span><span class="player-list-title">No tracks found in playlist</span></li>';
       }
     }
   }
@@ -711,43 +654,6 @@
       document.querySelectorAll('#playlist li').forEach(item => {
         item.classList.toggle('player-list-light', parseInt(item.dataset.index) === currentIndex);
       });
-    }
-  }
-
-  // Improved scroll to active track in the playlist
-  function scrollToActiveTrack() {
-    if (!document.querySelector('#playlist')) return;
-    
-    const currentIndex = youtubePlayer.getPlaylistIndex();
-    const activeTrack = document.querySelector(`#playlist li[data-index="${currentIndex}"]`);
-    const playlistContainer = document.querySelector('.player-list');
-    
-    if (activeTrack && playlistContainer) {
-      // Calculate track height more precisely
-      const trackHeight = activeTrack.offsetHeight;
-      
-      // Get the visible height of the playlist container
-      const containerHeight = playlistContainer.clientHeight;
-      
-      // Calculate position that will center the active track
-      // We're calculating exact center positioning and adding an offset to ensure visibility
-      const scrollTop = activeTrack.offsetTop - (containerHeight / 2) + (trackHeight / 2);
-      
-      // Apply a slight upward offset to ensure track is fully visible
-      // This ensures the track isn't just at the edge of visibility
-      const visibilityOffset = trackHeight * 1.5; // Move up by 1.5 tracks worth of pixels
-      
-      // Smooth scroll to the adjusted position
-      playlistContainer.scrollTo({
-        top: Math.max(0, scrollTop - visibilityOffset),
-        behavior: 'smooth'
-      });
-      
-      // Add a highlight effect to make it more noticeable
-      activeTrack.classList.add('highlight-pulse');
-      setTimeout(() => {
-        activeTrack.classList.remove('highlight-pulse');
-      }, 1000);
     }
   }
 
@@ -764,42 +670,14 @@
 
   // Play next/previous track
   function playNextTrack() {
-    if (youtubePlayer) {
-      if (playerConfig.shuffle) {
-        // Find current position in shuffled playlist
-        const currentIndex = youtubePlayer.getPlaylistIndex();
-        const currentShuffledIndex = shuffledPlaylist.indexOf(currentIndex);
-        
-        // Get next track in shuffled order
-        const nextShuffledIndex = (currentShuffledIndex + 1) % shuffledPlaylist.length;
-        const nextOriginalIndex = shuffledPlaylist[nextShuffledIndex];
-        
-        // Play the next track based on our shuffle order
-        youtubePlayer.playVideoAt(nextOriginalIndex);
-      } else {
-        youtubePlayer.nextVideo();
-      }
-    }
+    if (youtubePlayer) youtubePlayer.nextVideo();
   }
   
   function playPreviousTrack() {
-    if (youtubePlayer) {
-      if (playerConfig.shuffle) {
-        // Find current position in shuffled playlist
-        const currentIndex = youtubePlayer.getPlaylistIndex();
-        const currentShuffledIndex = shuffledPlaylist.indexOf(currentIndex);
-        
-        // Get previous track in shuffled order
-        const prevShuffledIndex = (currentShuffledIndex - 1 + shuffledPlaylist.length) % shuffledPlaylist.length;
-        const prevOriginalIndex = shuffledPlaylist[prevShuffledIndex];
-        
-        // Play the previous track based on our shuffle order
-        youtubePlayer.playVideoAt(prevOriginalIndex);
-      } else {
-        youtubePlayer.previousVideo();
-      }
-    }
+    if (youtubePlayer) youtubePlayer.previousVideo();
   }
+
+
 
   // Toggle mobile player visibility
   function toggleMobilePlayer() {
@@ -846,11 +724,6 @@
         playlistContainer.style.display = isVisible ? 'none' : 'block';
         toggleBtn.querySelector('span').textContent = isVisible ? 'Show Playlist' : 'Hide Playlist';
         dropdownIcon.classList.toggle('active');
-        
-        // If making visible and there's an active track, scroll to it
-        if (!isVisible && youtubePlayer) {
-          setTimeout(scrollToActiveTrack, 100); // Short delay to ensure the playlist is visible
-        }
       });
     }
     
