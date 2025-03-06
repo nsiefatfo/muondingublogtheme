@@ -39,3 +39,4 @@ window.addEventListener("pjax:send", () => {
 if (window.startLoading) window.addEventListener("pjax:send", startLoading!);
 if (window.endLoading) window.addEventListener("pjax:complete", endLoading!);
 if (window.aosInit) window.addEventListener("pjax:success", aosInit!);
+

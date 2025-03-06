@@ -11,18 +11,77 @@
 >
   <head>
     {{ partial "head.html" . }}
+    
+    <!-- Resources-specific CSS -->
+    {{ $style := resources.Get "scss/resources.scss" }}
+    {{ if $style }}
+      {{ $processedStyle := $style | resources.ToCSS | resources.Minify | resources.Fingerprint }}
+      <link rel="stylesheet" href="{{ $processedStyle.Permalink }}" integrity="{{ $processedStyle.Data.Integrity }}">
+    {{ end }}
   </head>
   <body>
     {{ partial "loader.html" . }}
     <div id="container">
       <div id="wrap">
         {{ partial "header.html" . }}
-        <div id="content"
-          {{ if or (and (eq .Site.Params.sidebar "left") (eq .Params.sidebar nil)) (eq .Params.sidebar "left") }}class="sidebar-left"{{ end }}
-          {{ if or (and (eq .Site.Params.sidebar "right") (eq .Params.sidebar nil)) (eq .Params.sidebar "right") }}class="sidebar-right"{{ end }}  >
-          {{ partial "sidebar.html" . }}
-          <section id="main">{{ block "main" . }}{{ end }}</section>
+        
+        <!-- Custom full-width content area for resources page -->
+        <div class="resources-full-width">
+          <div class="docs-container">
+            <div class="docs-sidebar">
+              <div class="docs-toc">
+                <div class="toc-header">On this page</div>
+                <nav id="TableOfContents">
+                  <ul>
+                    {{ range .Params.sections }}
+                    <li><a href="#{{ anchorize .title }}">{{ .title }}</a></li>
+                    {{ end }}
+                  </ul>
+                </nav>
+              </div>
+            </div>
+            
+            <article class="docs-content">
+              <h1>{{ .Title }}</h1>
+              
+              {{ if .Description }}
+              <div class="docs-description">
+                {{ .Description }}
+              </div>
+              {{ end }}
+              
+              {{ .Content }}
+              
+              <!-- Resources Sections -->
+              {{ range .Params.sections }}
+              <section id="{{ anchorize .title }}" class="resource-section">
+                <h2>{{ .title }}</h2>
+                <p>{{ .description }}</p>
+                
+                <div class="resource-cards">
+                  {{ range .resources }}
+                  <div class="resource-card">
+                    {{ if .icon }}<div class="resource-icon"><i class="fas {{ .icon }}"></i></div>{{ end }}
+                    <div class="resource-content">
+                      <h3>{{ .name }}</h3>
+                      <p>{{ .description }}</p>
+                      {{ if .link }}<a href="{{ .link }}" class="resource-link" {{ if .external }}target="_blank" rel="noopener"{{ end }}>{{ .linkText | default "Learn More" }} {{ if .external }}<i class="fas fa-external-link-alt"></i>{{ end }}</a>{{ end }}
+                    </div>
+                  </div>
+                  {{ end }}
+                </div>
+              </section>
+              {{ end }}
+              
+              {{ if .Params.footer }}
+              <div class="docs-footer">
+                {{ .Params.footer | markdownify }}
+              </div>
+              {{ end }}
+            </article>
+          </div>
         </div>
+        
         {{ if and .Site.Params.player.aplayer.enable (not .Site.Params.player.meting.enable) .Site.Params.player.aplayer.options.fixed  }}
           <div id="aplayer" theme="var(--color-link)" data-aos="{{ .Site.Params.animation.options.home.sidebar }}"></div>
         {{ end }}
@@ -78,12 +137,5 @@
     {{ partial "youtube-player.html" . }}
     {{ partial "kofi.html" . }}
     {{ partial "language-flipper.html" . }}
-
   </body>
 </html>
-
-
-<!-- Elfsight Audio Player | Untitled Audio Player 
-<script src="https://static.elfsight.com/platform/platform.js" async></script>
-<div class="elfsight-app-4aad71cb-9178-4154-afbc-2b2b9c5658bc" data-elfsight-app-lazy></div> -->
-

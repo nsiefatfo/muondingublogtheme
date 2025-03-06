@@ -1,3 +1,4 @@
+{{ if not .Params.disable_tagcloud }}
 {{ if len .Site.Taxonomies.tags }}
 <div class="widget-wrapper">
   <div
@@ -26,4 +27,5 @@
     </div>
   </div>
 </div>
+{{ end }}
 {{ end }}

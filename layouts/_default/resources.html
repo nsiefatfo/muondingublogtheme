@@ -1,0 +1,119 @@
+<!doctype html>
+<html
+  lang="{{ .Site.LanguageCode }}" 
+  {{ if eq .Site.Params.dark_mode.enable true }}
+    data-theme-mode="true"
+  {{ else if eq .Site.Params.dark_mode.enable false }}
+    data-theme-mode="false"
+  {{ else if eq .Site.Params.dark_mode.enable "auto" }}
+    data-theme-mode="auto"
+  {{ end }}
+>
+  <head>
+    {{ partial "head.html" . }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Resources-specific CSS -->
+    {{ $style := resources.Get "scss/resources.scss" }}
+    {{ if $style }}
+      {{ $processedStyle := $style | resources.ToCSS | resources.Minify | resources.Fingerprint }}
+      <link rel="stylesheet" href="{{ $processedStyle.Permalink }}" integrity="{{ $processedStyle.Data.Integrity }}">
+    {{ end }}
+  </head>
+  <body>
+    {{ partial "loader.html" . }}
+    <div id="container">
+      <div id="wrap">
+        {{ partial "header.html" . }}
+        
+        <!-- Custom full-width content area for resources page -->
+        <div class="resources-full-width">
+          <div class="docs-container">
+            <div class="docs-sidebar">
+              <div class="docs-toc">
+                <div class="toc-header">On this page</div>
+                <nav id="TableOfContents">
+                  <ul>
+                    {{ range .Params.sections }}
+                    <li><a href="#{{ anchorize .title }}">{{ .title }}</a></li>
+                    {{ end }}
+                  </ul>
+                </nav>
+              </div>
+            </div>
+            
+            <article class="docs-content">
+              <h1>  </h1>
+              
+              {{ if .Description }}
+              <div class="docs-description">
+                {{ .Description }}
+              </div>
+              {{ end }}
+              
+              {{ .Content }}
+              
+              <!-- Resources Sections -->
+              {{ range .Params.sections }}
+              <section id="{{ anchorize .title }}" class="resource-section">
+                <h2>{{ .title }}</h2>
+                <p>{{ .description }}</p>
+                
+                <div class="resource-cards">
+                  {{ range .resources }}
+                  <div class="resource-card">
+                    {{ if .icon }}<div class="resource-icon"><i class="fas {{ .icon }}"></i></div>{{ end }}
+                    <div class="resource-content">
+                      <h3>{{ .name }}</h3>
+                      <p>{{ .description }}</p>
+                      {{ if .link }}<a href="{{ .link }}" class="resource-link" {{ if .external }}target="_blank" rel="noopener"{{ end }}>{{ .linkText | default "Learn More" }} {{ if .external }}<i class="fas fa-external-link-alt"></i>{{ end }}</a>{{ end }}
+                    </div>
+                  </div>
+                  {{ end }}
+                </div>
+              </section>
+              {{ end }}
+              
+              {{ if .Params.footer }}
+              <div class="docs-footer">
+                {{ .Params.footer | markdownify }}
+              </div>
+              {{ end }}
+            </article>
+          </div>
+        </div>
+        
+        {{ partial "footer.html" . }}
+        {{ if .Site.Params.top.enable }}
+          <div class="sidebar-top">
+            <div class="sidebar-top-taichi {{ if .Site.Params.top.icon.rotate }}rotate{{ end }}"></div>
+            <div class="arrow-up"></div>
+          </div>
+        {{ end }}
+        <div id="mask" class="hide"></div>
+      </div>
+      {{ partial "mobilebar.html" . }}
+    </div>
+    {{ if .Site.Params.algolia_search.enable }}
+      <div class="site-search">
+        <div class="reimu-popup popup">
+          <div class="reimu-search">
+            <div class="reimu-search-input-icon"></div>
+            <div class="reimu-search-input" id="reimu-search-input"></div>
+            <div class="popup-btn-close"></div>
+          </div>
+          <div class="reimu-results">
+            <div id="reimu-stats"></div>
+            <div id="reimu-hits"></div>
+            <div id="reimu-pagination" class="reimu-pagination"></div>
+          </div>
+          <img class="reimu-bg" src="{{ "images/reimu.png" | relURL }}" />
+        </div>
+      </div>
+    {{ end }}
+    {{ partial "afterFooter.html" . }}
+
+    {{ partial "youtube-player.html" . }}
+    {{ partial "kofi.html" . }}
+    {{ partial "language-flipper.html" . }}
+  </body>
+</html>

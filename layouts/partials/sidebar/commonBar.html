@@ -1,5 +1,5 @@
 {{ $params := .Site.Params }}
-
+{{ if not .Params.disable_commonbar }}
 {{ if in .Site.Params.mainSections .Type }}
   {{/* Minimalistic version for posts */}}
   <div class="sidebar-author-mini">
@@ -337,6 +337,8 @@
     color: white;
   }
 </style>
+
+{{end}}
 
 <!-- Commented out widgets -->
 <!-- 

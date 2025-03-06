@@ -42,6 +42,8 @@
 <style>
 .lang-switcher {
   position: fixed;
+  top: unset;
+  left: unset;
   bottom: 20px;
   right: 40px;
   z-index: 1000;
@@ -93,15 +95,40 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-/* Add this for screen reader only text */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
 </style>
+
+<script>
+
+  // Add this script after your PJAX initialization
+document.addEventListener('pjax:complete', function() {
+  // Reinitialize language switcher when PJAX completes loading a new page
+  updateLanguageSwitcher();
+});
+
+function updateLanguageSwitcher() {
+  // Get all language switcher links
+  const langLinks = document.querySelectorAll('.lang-switcher .lang-option, .seo-language-links a');
+  
+  // Update each link to use PJAX navigation
+  langLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Get the URL from the clicked link
+      const url = this.getAttribute('href');
+      
+      // Use PJAX to navigate
+      if (window.pjax) {
+        window.pjax.loadUrl(url);
+      } else {
+        // Fallback to regular navigation if PJAX isn't available
+        window.location.href = url;
+      }
+    });
+  });
+}
+
+// Initial call for the first page load
+document.addEventListener('DOMContentLoaded', updateLanguageSwitcher);
+
+</script>

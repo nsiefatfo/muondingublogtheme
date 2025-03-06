@@ -42,6 +42,7 @@ $share-keys: {{ delimit (apply $share_keys "printf" "'%s'" "." ) "," }};
 @import "_variables";
 @import "_animation";
 @import "_extend";
+@import "resources";
 
 {{ if $params.icon_font }}
   @import "iconfont";
